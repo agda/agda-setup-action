@@ -1,4 +1,4 @@
-name: 'Setup Agda'
+name: 'Agda Setup Action'
 description: 'Install Agda from official releases and optionally the standard library'
 author: 'Andreas Abel'
 
