@@ -166,3 +166,9 @@ runs:
         echo "${stdlib_path}" >> "${AGDA_DIR}/libraries"
         echo "Agda libraries file content:"
         cat "${AGDA_DIR}/libraries"
+
+    - name: Make Agda standard library default
+      if: inputs.agda-stdlib-version != ''
+      shell: bash
+      run: |
+        echo "standard-library-${{ inputs.agda-stdlib-version }}" >> "${AGDA_DIR}/defaults"

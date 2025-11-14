@@ -58,6 +58,11 @@ For older Agda versions, please use [`wenkokke/setup-agda`](https://github.com/w
 | `agda-version`        | Version of Agda to install (e.g., `2.8.0`)                                                                      | Yes      | `2.8.0` |
 | `agda-stdlib-version` | Version of Agda standard library to install (e.g., `2.3`). If not specified, the library will not be installed. | No       | `''`    |
 
+If the standard library is installed, it is also added to the default libraries:
+
+- The path to `standard-library.agda-lib` is added to the `libraries` file in the Agda directory (`${{ steps.setup-agda.outputs.agda-dir }}`).
+- The string `standard-library-${{ agda-stdlib-version }}` is added to the `defaults` file there.
+
 ## Outputs
 
 | Name        | Description                            |
