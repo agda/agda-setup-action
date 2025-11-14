@@ -1,6 +1,13 @@
 name: Example Usage
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -8,35 +15,35 @@ permissions:
 jobs:
   example:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-      
+
       - name: Setup Agda
         id: setup-agda
-        uses: agda/agda-setup-action@v1
+        uses: agda/agda-setup-action@master
         with:
           agda-version: '2.8.0'
           agda-stdlib-version: '2.3'
-      
+
       - name: Show Agda info
         run: |
           echo "Agda path: ${{ steps.setup-agda.outputs.agda-path }}"
           echo "Agda dir: ${{ steps.setup-agda.outputs.agda-dir }}"
           agda --version
-      
+
       - name: Create a simple Agda file
         run: |
           cat > Example.agda << 'EOF'
           module Example where
-          
+
           open import Data.Bool.Base
           open import Data.Nat.Base
-          
+
           example : Bool
           example = true
           EOF
-      
+
       - name: Type-check Agda file
         run: agda Example.agda

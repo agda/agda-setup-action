@@ -3,10 +3,11 @@ name: Test Action
 on:
   push:
     branches:
-      - main
       - master
       - 'copilot/**'
   pull_request:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
@@ -16,16 +17,8 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
-        include:
-          - os: ubuntu-latest
-            agda-stdlib-version: '2.3'
-          - os: windows-latest
-            agda-stdlib-version: ''
-          - os: macos-latest
-            agda-stdlib-version: '2.3'
-          - os: macos-13
-            agda-stdlib-version: ''
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-15-intel]
+        agda-stdlib-version: ['2.3']
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -43,17 +36,19 @@ jobs:
           echo "Agda path: ${{ steps.setup.outputs.agda-path }}"
           echo "Agda dir: ${{ steps.setup.outputs.agda-dir }}"
           agda --version
-          
+
       - name: Create test file
-        if: matrix.os == 'ubuntu-latest'
+        shell: bash
         run: |
           cat > test.agda << 'EOF'
           module test where
-          
-          data Bool : Set where
-            true false : Bool
+
+          open import Data.Bool.Base
+          open import Data.Nat.Base
+
+          example : Bool
+          example = true
           EOF
 
       - name: Test Agda
-        if: matrix.os == 'ubuntu-latest'
         run: agda test.agda

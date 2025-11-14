@@ -2,25 +2,26 @@
 
 GitHub composite action to install Agda from the official deployed binaries and optionally the Agda standard library.
 
+It supports Agda 2.8.0 (and up).
+For older Agda versions, please use [`wenkokke/setup-agda`](https://github.com/wenkokke/setup-agda).
+
 ## Features
 
 - Installs Agda from official GitHub releases.
 - Optional installation of the Agda standard library.
 - Cross-platform support:
-  - Ubuntu (latest)
-  - Windows (latest)
-  - macOS (latest, including macOS-15-intel)
+  - Linux
+  - Windows
+  - macOS (ARM and x86)
 - Outputs the path to the Agda executable and Agda application directory.
 
 ## Usage
 
-### Basic Usage (Agda only)
+### Basic Usage (default Agda version)
 
 ```yaml
 - name: Setup Agda
   uses: agda/agda-setup-action@v1
-  with:
-    agda-version: '2.8.0'
 ```
 
 ### With Standard Library
@@ -52,17 +53,17 @@ GitHub composite action to install Agda from the official deployed binaries and 
 
 ## Inputs
 
-| Name | Description | Required | Default |
-|------|-------------|----------|---------|
-| `agda-version` | Version of Agda to install (e.g., `2.8.0`) | Yes | - |
-| `agda-stdlib-version` | Version of Agda standard library to install (e.g., `2.3`). If not specified, stdlib will not be installed. | No | `''` |
+| Name                  | Description                                                                                                     | Required | Default |
+|-----------------------|-----------------------------------------------------------------------------------------------------------------|----------|---------|
+| `agda-version`        | Version of Agda to install (e.g., `2.8.0`)                                                                      | Yes      | `2.8.0` |
+| `agda-stdlib-version` | Version of Agda standard library to install (e.g., `2.3`). If not specified, the library will not be installed. | No       | `''`    |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| `agda-path` | Path to the Agda executable |
-| `agda-dir` | Path to the Agda application directory |
+| Name        | Description                            |
+|-------------|----------------------------------------|
+| `agda-path` | Path to the Agda executable            |
+| `agda-dir`  | Path to the Agda application directory |
 
 ## Example Workflow
 
@@ -74,16 +75,16 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v5
-      
+
       - name: Setup Agda
         uses: agda/agda-setup-action@v1
         with:
           agda-version: '2.8.0'
           agda-stdlib-version: '2.3'
-      
+
       - name: Build Agda files
         run: agda Main.agda
 ```
@@ -91,13 +92,14 @@ jobs:
 ## Platform Support
 
 This action supports the following platforms:
-- `ubuntu-latest`
-- `windows-latest`
-- `macos-latest`
-- `macos-15-intel`
+
+- Linux, e.g. `ubuntu-latest`
+- Windows, e.g. `windows-latest`
+- macOS ARM, e.g. `macos-latest`
+- macOS x86, e.g. `macos-15-intel`
 
 The action automatically detects the platform and downloads the appropriate binary for your runner.
 
 ## License
 
-This project is licensed under the same terms as Agda itself.
+This project is licensed under the BSD 3-clause license.

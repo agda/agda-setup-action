@@ -1,13 +1,14 @@
 name: 'Setup Agda'
 description: 'Install Agda from official releases and optionally the standard library'
-author: 'Agda Team'
+author: 'Andreas Abel'
 
 inputs:
   agda-version:
     description: 'Version of Agda to install (e.g., 2.8.0)'
     required: true
+    default: '2.8.0'
   agda-stdlib-version:
-    description: 'Version of Agda standard library to install (e.g., 2.3). If not specified, stdlib will not be installed.'
+    description: 'Version of Agda standard library to install (e.g., 2.3). If not specified, the standard library will not be installed.'
     required: false
     default: ''
 
@@ -60,14 +61,14 @@ runs:
       run: |
         archive_name="${{ steps.platform.outputs.archive-name }}"
         download_url="https://github.com/agda/agda/releases/download/v${{ inputs.agda-version }}/${archive_name}"
-        
+
         echo "Downloading Agda from: ${download_url}"
         http_code=$(curl -w '%{http_code}\n' -L "${download_url}" -o "agda-archive.${{ steps.platform.outputs.archive-ext }}")
         exit_code=$?
-        
+
         echo "curl exit code: ${exit_code}"
         echo "curl http code: ${http_code}"
-        
+
         if [[ "${exit_code}" != "0" || "${http_code}" != "200" ]]; then
           echo "Download of Agda archive failed."
           exit 1
@@ -108,23 +109,23 @@ runs:
       run: |
         agda --version
         agda --setup
-        
+
         if [[ "${{ runner.os }}" == "Windows" ]]; then
           AGDA_DIR=$(agda --print-agda-app-dir | sed 's/\\/\//g')
         else
           AGDA_DIR=$(agda --print-agda-app-dir)
         fi
-        
+
         mkdir -p "${AGDA_DIR}"
         mkdir -p "${AGDA_DIR}/libraries.d"
-        
+
         # Find agda executable path
         if [[ "${{ runner.os }}" == "Windows" ]]; then
           AGDA_PATH=$(where agda | head -1)
         else
           AGDA_PATH=$(which agda)
         fi
-        
+
         echo "agda-dir=${AGDA_DIR}" >> "${GITHUB_OUTPUT}"
         echo "agda-path=${AGDA_PATH}" >> "${GITHUB_OUTPUT}"
         echo "AGDA_DIR=${AGDA_DIR}" >> "${GITHUB_ENV}"
@@ -134,19 +135,19 @@ runs:
       shell: bash
       run: |
         download_url="https://github.com/agda/agda-stdlib/archive/refs/tags/v${{ inputs.agda-stdlib-version }}.tar.gz"
-        
+
         echo "Downloading Agda standard library from: ${download_url}"
         http_code=$(curl -w '%{http_code}\n' -L "${download_url}" -o "agda-stdlib.tar.gz")
         exit_code=$?
-        
+
         echo "curl exit code: ${exit_code}"
         echo "curl http code: ${http_code}"
-        
+
         if [[ "${exit_code}" != "0" || "${http_code}" != "200" ]]; then
           echo "Download of Agda standard library archive failed."
           exit 1
         fi
-        
+
         tar xf agda-stdlib.tar.gz -C "${AGDA_DIR}/libraries.d/"
 
     - name: Setup Agda standard library
@@ -154,14 +155,14 @@ runs:
       shell: bash
       run: |
         stdlib_path="${AGDA_DIR}/libraries.d/agda-stdlib-${{ inputs.agda-stdlib-version }}/standard-library.agda-lib"
-        
+
         if [[ ! -f "${stdlib_path}" ]]; then
           echo "Standard library file not found at: ${stdlib_path}"
           echo "Contents of libraries.d:"
           ls -la "${AGDA_DIR}/libraries.d/"
           exit 1
         fi
-        
+
         echo "${stdlib_path}" >> "${AGDA_DIR}/libraries"
         echo "Agda libraries file content:"
         cat "${AGDA_DIR}/libraries"
