@@ -1,0 +1,185 @@
+name: 'Setup Agda'
+description: 'Install Agda from official releases and optionally the standard library'
+author: 'Agda Team'
+
+inputs:
+  agda-version:
+    description: 'Version of Agda to install (e.g., 2.8.0)'
+    required: true
+  agda-stdlib-version:
+    description: 'Version of Agda standard library to install (e.g., 2.3). If not specified, stdlib will not be installed.'
+    required: false
+    default: ''
+
+outputs:
+  agda-path:
+    description: 'Path to the Agda executable'
+    value: ${{ steps.setup-agda.outputs.agda-path }}
+  agda-dir:
+    description: 'Path to the Agda application directory'
+    value: ${{ steps.setup-agda.outputs.agda-dir }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Determine platform
+      id: platform
+      shell: bash
+      run: |
+        case "${{ runner.os }}" in
+          Linux)
+            echo "os=linux"
+            echo "archive-ext=tar.xz"
+            echo "archive-name=Agda-v${{ inputs.agda-version }}-linux.tar.xz"
+            ;;
+          Windows)
+            echo "os=windows"
+            echo "archive-ext=zip"
+            echo "archive-name=Agda-v${{ inputs.agda-version }}-windows.zip"
+            ;;
+          macOS)
+            # Determine if we're on Intel or ARM
+            if [[ "${{ runner.arch }}" == "X64" ]]; then
+              echo "os=macos-intel"
+              echo "archive-ext=tar.xz"
+              echo "archive-name=Agda-v${{ inputs.agda-version }}-macos-intel.tar.xz"
+            else
+              echo "os=macos"
+              echo "archive-ext=tar.xz"
+              echo "archive-name=Agda-v${{ inputs.agda-version }}-macos.tar.xz"
+            fi
+            ;;
+          *)
+            echo "Unsupported OS: ${{ runner.os }}"
+            exit 1
+            ;;
+        esac >> "${GITHUB_OUTPUT}"
+
+    - name: Download Agda ${{ inputs.agda-version }}
+      shell: bash
+      run: |
+        archive_name="${{ steps.platform.outputs.archive-name }}"
+        download_url="https://github.com/agda/agda/releases/download/v${{ inputs.agda-version }}/${archive_name}"
+        
+        echo "Downloading Agda from: ${download_url}"
+        http_code=$(curl -w '%{http_code}\n' -L "${download_url}" -o "agda-archive.${{ steps.platform.outputs.archive-ext }}")
+        exit_code=$?
+        
+        echo "curl exit code: ${exit_code}"
+        echo "curl http code: ${http_code}"
+        
+        if [[ "${exit_code}" != "0" || "${http_code}" != "200" ]]; then
+          echo "Download of Agda archive failed."
+          exit 1
+        fi
+
+    - name: Extract Agda (Unix)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        tar xf "agda-archive.${{ steps.platform.outputs.archive-ext }}"
+
+    - name: Extract Agda (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        Expand-Archive -Path "agda-archive.${{ steps.platform.outputs.archive-ext }}" -DestinationPath .
+
+    - name: Install Agda (Unix)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        mkdir -p "${HOME}/.local/bin/"
+        if [[ -f "agda" ]]; then
+          mv agda "${HOME}/.local/bin/"
+        elif [[ -f "bin/agda" ]]; then
+          mv bin/agda "${HOME}/.local/bin/"
+        else
+          echo "Could not find agda executable in archive"
+          ls -la
+          exit 1
+        fi
+        echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+
+    - name: Install Agda (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $installPath = Join-Path $env:USERPROFILE ".local\bin"
+        New-Item -ItemType Directory -Force -Path $installPath | Out-Null
+        
+        if (Test-Path "agda.exe") {
+          Move-Item -Path "agda.exe" -Destination $installPath -Force
+        } elseif (Test-Path "bin\agda.exe") {
+          Move-Item -Path "bin\agda.exe" -Destination $installPath -Force
+        } else {
+          Write-Error "Could not find agda.exe in archive"
+          Get-ChildItem -Recurse
+          exit 1
+        }
+        
+        "$installPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Setup Agda directories
+      id: setup-agda
+      shell: bash
+      run: |
+        agda --version
+        agda --setup
+        
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          AGDA_DIR=$(agda --print-agda-app-dir | sed 's/\\/\//g')
+        else
+          AGDA_DIR=$(agda --print-agda-app-dir)
+        fi
+        
+        mkdir -p "${AGDA_DIR}"
+        mkdir -p "${AGDA_DIR}/libraries.d"
+        
+        # Find agda executable path
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          AGDA_PATH=$(where agda | head -1)
+        else
+          AGDA_PATH=$(which agda)
+        fi
+        
+        echo "agda-dir=${AGDA_DIR}" >> "${GITHUB_OUTPUT}"
+        echo "agda-path=${AGDA_PATH}" >> "${GITHUB_OUTPUT}"
+        echo "AGDA_DIR=${AGDA_DIR}" >> "${GITHUB_ENV}"
+
+    - name: Download Agda standard library
+      if: inputs.agda-stdlib-version != ''
+      shell: bash
+      run: |
+        download_url="https://github.com/agda/agda-stdlib/archive/refs/tags/v${{ inputs.agda-stdlib-version }}.tar.gz"
+        
+        echo "Downloading Agda standard library from: ${download_url}"
+        http_code=$(curl -w '%{http_code}\n' -L "${download_url}" -o "agda-stdlib.tar.gz")
+        exit_code=$?
+        
+        echo "curl exit code: ${exit_code}"
+        echo "curl http code: ${http_code}"
+        
+        if [[ "${exit_code}" != "0" || "${http_code}" != "200" ]]; then
+          echo "Download of Agda standard library archive failed."
+          exit 1
+        fi
+        
+        tar xf agda-stdlib.tar.gz -C "${AGDA_DIR}/libraries.d/"
+
+    - name: Setup Agda standard library
+      if: inputs.agda-stdlib-version != ''
+      shell: bash
+      run: |
+        stdlib_path="${AGDA_DIR}/libraries.d/agda-stdlib-${{ inputs.agda-stdlib-version }}/standard-library.agda-lib"
+        
+        if [[ ! -f "${stdlib_path}" ]]; then
+          echo "Standard library file not found at: ${stdlib_path}"
+          echo "Contents of libraries.d:"
+          ls -la "${AGDA_DIR}/libraries.d/"
+          exit 1
+        fi
+        
+        echo "${stdlib_path}" >> "${AGDA_DIR}/libraries"
+        echo "Agda libraries file content:"
+        cat "${AGDA_DIR}/libraries"
