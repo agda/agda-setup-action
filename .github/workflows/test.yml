@@ -1,0 +1,100 @@
+name: Test Action
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'copilot/**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Agda
+        id: setup
+        uses: ./
+        with:
+          agda-version: '2.8.0'
+          agda-stdlib-version: '2.3'
+
+      - name: Verify Agda installation
+        run: |
+          echo "Agda path: ${{ steps.setup.outputs.agda-path }}"
+          echo "Agda dir: ${{ steps.setup.outputs.agda-dir }}"
+          agda --version
+          
+      - name: Create test file
+        run: |
+          cat > test.agda << 'EOF'
+          module test where
+          
+          data Bool : Set where
+            true false : Bool
+          EOF
+
+      - name: Test Agda
+        run: agda test.agda
+
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Agda
+        id: setup
+        uses: ./
+        with:
+          agda-version: '2.8.0'
+
+      - name: Verify Agda installation
+        run: |
+          echo "Agda path: ${{ steps.setup.outputs.agda-path }}"
+          echo "Agda dir: ${{ steps.setup.outputs.agda-dir }}"
+          agda --version
+
+  test-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Agda
+        id: setup
+        uses: ./
+        with:
+          agda-version: '2.8.0'
+          agda-stdlib-version: '2.3'
+
+      - name: Verify Agda installation
+        run: |
+          echo "Agda path: ${{ steps.setup.outputs.agda-path }}"
+          echo "Agda dir: ${{ steps.setup.outputs.agda-dir }}"
+          agda --version
+
+  test-macos-intel:
+    runs-on: macos-13  # Intel-based macOS
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Agda
+        id: setup
+        uses: ./
+        with:
+          agda-version: '2.8.0'
+
+      - name: Verify Agda installation
+        run: |
+          echo "Agda path: ${{ steps.setup.outputs.agda-path }}"
+          echo "Agda dir: ${{ steps.setup.outputs.agda-dir }}"
+          agda --version
