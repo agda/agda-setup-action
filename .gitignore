@@ -1,0 +1,24 @@
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+
+# Archive files used during testing
+*.tar.xz
+*.tar.gz
+*.zip
+
+# Agda build artifacts
+*.agdai
+_build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
