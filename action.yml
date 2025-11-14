@@ -35,18 +35,18 @@ runs:
           Windows)
             echo "os=windows"
             echo "archive-ext=zip"
-            echo "archive-name=Agda-v${{ inputs.agda-version }}-windows.zip"
+            echo "archive-name=Agda-v${{ inputs.agda-version }}-win64.zip"
             ;;
           macOS)
             # Determine if we're on Intel or ARM
             if [[ "${{ runner.arch }}" == "X64" ]]; then
-              echo "os=macos-intel"
+              echo "os=macos-x64"
               echo "archive-ext=tar.xz"
-              echo "archive-name=Agda-v${{ inputs.agda-version }}-macos-intel.tar.xz"
+              echo "archive-name=Agda-v${{ inputs.agda-version }}-macOS-x64.tar.xz"
             else
-              echo "os=macos"
+              echo "os=macos-arm64"
               echo "archive-ext=tar.xz"
-              echo "archive-name=Agda-v${{ inputs.agda-version }}-macos.tar.xz"
+              echo "archive-name=Agda-v${{ inputs.agda-version }}-macOS-arm64.tar.xz"
             fi
             ;;
           *)
@@ -90,15 +90,7 @@ runs:
       shell: bash
       run: |
         mkdir -p "${HOME}/.local/bin/"
-        if [[ -f "agda" ]]; then
-          mv agda "${HOME}/.local/bin/"
-        elif [[ -f "bin/agda" ]]; then
-          mv bin/agda "${HOME}/.local/bin/"
-        else
-          echo "Could not find agda executable in archive"
-          ls -la
-          exit 1
-        fi
+        mv agda "${HOME}/.local/bin/"
         echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
 
     - name: Install Agda (Windows)
@@ -107,17 +99,7 @@ runs:
       run: |
         $installPath = Join-Path $env:USERPROFILE ".local\bin"
         New-Item -ItemType Directory -Force -Path $installPath | Out-Null
-        
-        if (Test-Path "agda.exe") {
-          Move-Item -Path "agda.exe" -Destination $installPath -Force
-        } elseif (Test-Path "bin\agda.exe") {
-          Move-Item -Path "bin\agda.exe" -Destination $installPath -Force
-        } else {
-          Write-Error "Could not find agda.exe in archive"
-          Get-ChildItem -Recurse
-          exit 1
-        }
-        
+        Move-Item -Path "agda.exe" -Destination $installPath -Force
         "$installPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Setup Agda directories
