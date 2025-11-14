@@ -11,7 +11,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Setup Agda
         id: setup-agda
@@ -31,8 +31,8 @@ jobs:
           cat > Example.agda << 'EOF'
           module Example where
           
-          open import Data.Bool
-          open import Data.Nat
+          open import Data.Bool.Base
+          open import Data.Nat.Base
           
           example : Bool
           example = true

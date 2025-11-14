@@ -4,13 +4,13 @@ GitHub composite action to install Agda from the official deployed binaries and 
 
 ## Features
 
-- Installs Agda from official GitHub releases
-- Optional installation of the Agda standard library
+- Installs Agda from official GitHub releases.
+- Optional installation of the Agda standard library.
 - Cross-platform support:
   - Ubuntu (latest)
   - Windows (latest)
   - macOS (latest, including macOS-15-intel)
-- Outputs the path to the Agda executable and Agda application directory
+- Outputs the path to the Agda executable and Agda application directory.
 
 ## Usage
 
@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Setup Agda
         uses: agda/agda-setup-action@v1
