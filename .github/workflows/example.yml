@@ -2,6 +2,9 @@ name: Example Usage
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   example:
     runs-on: ubuntu-latest
